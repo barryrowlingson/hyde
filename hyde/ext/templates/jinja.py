@@ -16,12 +16,13 @@ from hyde.template import HtmlWrap, Template
 from operator import attrgetter
 
 from jinja2 import (
-    contextfunction,
     Environment,
     FileSystemLoader,
     FileSystemBytecodeCache
 )
-from jinja2 import contextfilter, environmentfilter, Markup, Undefined, nodes
+from jinja2 import  Undefined, nodes
+from markupsafe import Markup
+from jinja2.filters import pass_environment, pass_context
 from jinja2.ext import Extension
 from jinja2.exceptions import TemplateError
 
@@ -45,7 +46,7 @@ class SilentUndefined(Undefined):
         return self
 
 
-@contextfunction
+@pass_context
 def media_url(context, path, safe=None):
     """
     Returns the media url given a partial path.
@@ -53,7 +54,7 @@ def media_url(context, path, safe=None):
     return context['site'].media_url(path, safe)
 
 
-@contextfunction
+@pass_context
 def content_url(context, path, safe=None):
     """
     Returns the content url given a partial path.
@@ -61,7 +62,7 @@ def content_url(context, path, safe=None):
     return context['site'].content_url(path, safe)
 
 
-@contextfunction
+@pass_context
 def full_url(context, path, safe=None):
     """
     Returns the full url given a partial path.
@@ -69,7 +70,7 @@ def full_url(context, path, safe=None):
     return context['site'].full_url(path, safe)
 
 
-@contextfilter
+@pass_context
 def urlencode(ctx, url, safe=None):
     if safe is not None:
         return quote(url.encode('utf8'), safe)
@@ -77,7 +78,7 @@ def urlencode(ctx, url, safe=None):
         return quote(url.encode('utf8'))
 
 
-@contextfilter
+@pass_context
 def urldecode(ctx, url):
     url = unquote(url)
     if not PY3:
@@ -85,7 +86,7 @@ def urldecode(ctx, url):
     return url
 
 
-@contextfilter
+@pass_context
 def date_format(ctx, dt, fmt=None):
     if not dt:
         dt = datetime.now()
@@ -120,7 +121,7 @@ def xmldatetime(dt):
     return dt.strftime("%Y-%m-%dT%H:%M:%S") + zprefix
 
 
-@environmentfilter
+@pass_environment
 def asciidoc(env, value):
     """
     (simple) Asciidoc filter
@@ -141,7 +142,7 @@ def asciidoc(env, value):
     return str(result.getvalue(), "utf-8")
 
 
-@environmentfilter
+@pass_environment
 def markdown(env, value):
     """
     Markdown filter with support for extensions.
@@ -165,7 +166,7 @@ def markdown(env, value):
     return marked.convert(output)
 
 
-@environmentfilter
+@pass_environment
 def restructuredtext(env, value):
     """
     RestructuredText filter
@@ -192,7 +193,7 @@ def restructuredtext(env, value):
     return parts['html_body']
 
 
-@environmentfilter
+@pass_environment
 def syntax(env, value, lexer=None, filename=None):
     """
     Processes the contained block using `pygments`
@@ -698,7 +699,6 @@ class Jinja2Template(Template):
             YamlVar,
             'jinja2.ext.do',
             'jinja2.ext.loopcontrols',
-            'jinja2.ext.with_'
         ]
 
         defaults = {
